@@ -125,6 +125,7 @@ class AppSettings(BaseSettings):
     BACKGROUND_SCRAPER_MAX_SERIES_PER_RUN: Optional[int] = 100
     ANIME_MAPPING_SOURCE: Optional[str] = "remote"
     ANIME_MAPPING_REFRESH_INTERVAL: Optional[int] = 86400
+    TITLE_MATCH_LANGUAGE: Optional[str] = "en-US"
 
     @field_validator("INDEXER_MANAGER_TYPE")
     def set_indexer_manager_type(cls, v, values):
@@ -800,3 +801,4 @@ trackers = [
     "udp://exodus.desync.com:6969/announce",
     "udp://tracker.dump.cl:6969/announce",
 ]
+}
