@@ -3,10 +3,13 @@ import aiohttp
 from comet.core.logger import logger
 
 
-async def get_imdb_metadata(session: aiohttp.ClientSession, id: str):
+async def get_imdb_metadata(
+    session: aiohttp.ClientSession, id: str, language: str = "en-US"
+):
     try:
         response = await session.get(
-            f"https://v3.sg.media-imdb.com/suggestion/a/{id}.json"
+            f"https://v3.sg.media-imdb.com/suggestion/a/{id}.json",
+            headers={"Accept-Language": language},
         )
         metadata = await response.json()
         for element in metadata["d"]:
@@ -18,3 +21,4 @@ async def get_imdb_metadata(session: aiohttp.ClientSession, id: str):
     except Exception as e:
         logger.warning(f"Exception while getting IMDB metadata for {id}: {e}")
         return None, None, None
+}
