@@ -33,10 +33,28 @@ class MetadataScraper:
         aliases_task = asyncio.create_task(self.get_aliases(media_type, id, is_kitsu))
         metadata, aliases = await asyncio.gather(metadata_task, aliases_task)
 
+        # Inject localized title into aliases if needed
+        if metadata and not is_kitsu and settings.TITLE_MATCH_LANGUAGE != "en-US":
+            await self._inject_localized_alias(id, aliases)
+
         if metadata is not None:
             await self.cache_metadata(id, metadata, aliases)
 
         return metadata, aliases
+
+    async def _inject_localized_alias(self, media_id: str, aliases: dict):
+        try:
+            localized_metadata = await get_imdb_metadata(
+                self.session, media_id, settings.TITLE_MATCH_LANGUAGE
+            )
+            if localized_metadata and localized_metadata[0]:
+                localized_title = localized_metadata[0]
+                if "ez" not in aliases:
+                    aliases["ez"] = []
+                if localized_title not in aliases["ez"]:
+                    aliases["ez"].append(localized_title)
+        except Exception:
+            pass
 
     async def get_cached(self, media_id: str, season: int, episode: int):
         row = await database.fetch_one(
@@ -131,6 +149,9 @@ class MetadataScraper:
         is_kitsu = "kitsu" in media_id
         aliases = await self.get_aliases(media_type, id, is_kitsu)
 
+        if not is_kitsu and settings.TITLE_MATCH_LANGUAGE != "en-US":
+            await self._inject_localized_alias(id, aliases)
+
         await self.cache_metadata(id, metadata, aliases)
 
         return metadata, aliases
@@ -189,3 +210,4 @@ class MetadataScraper:
 
         # Combine the aliases from both sources
         return self.combine_aliases(kitsu_aliases, trakt_aliases)
+}
